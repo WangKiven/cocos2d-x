@@ -5,7 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 
 object CHelper {
-    external fun getGLContextAttrs(): IntArray
+//    external fun getGLContextAttrs(): IntArray
 
 
     fun onLoadNativeLibraries(activity: Activity) {

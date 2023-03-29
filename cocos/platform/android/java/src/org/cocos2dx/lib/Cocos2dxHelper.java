@@ -92,7 +92,7 @@ public class Cocos2dxHelper {
     private static boolean sActivityVisible;
     private static String sPackageName;
     private static Activity sActivity = null;
-    private static Cocos2dxHelperListener sCocos2dxHelperListener;
+    public static Cocos2dxHelperListener sCocos2dxHelperListener;
     private static Set<OnActivityResultListener> onActivityResultListeners = new LinkedHashSet<OnActivityResultListener>();
     private static Vibrator sVibrateService = null;
     //Enhance API modification begin
@@ -117,7 +117,7 @@ public class Cocos2dxHelper {
     private static boolean sInited = false;
     public static void init(final Activity activity) {
         sActivity = activity;
-        Cocos2dxHelper.sCocos2dxHelperListener = (Cocos2dxHelperListener)activity;
+        if (activity instanceof Cocos2dxHelperListener) Cocos2dxHelper.sCocos2dxHelperListener = (Cocos2dxHelperListener)activity;
         if (!sInited) {
 
             PackageManager pm = activity.getPackageManager();
