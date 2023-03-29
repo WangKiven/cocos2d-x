@@ -1,6 +1,7 @@
 package com.kiven.cocos
 
 import android.app.Activity
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 
@@ -8,10 +9,10 @@ object CHelper {
 //    external fun getGLContextAttrs(): IntArray
 
 
-    fun onLoadNativeLibraries(activity: Activity) {
+    fun onLoadNativeLibraries(context: Context) {
         try {
-            val ai: ApplicationInfo = activity.packageManager.getApplicationInfo(
-                activity.packageName,
+            val ai: ApplicationInfo = context.packageManager.getApplicationInfo(
+                context.packageName,
                 PackageManager.GET_META_DATA
             )
             val bundle = ai.metaData

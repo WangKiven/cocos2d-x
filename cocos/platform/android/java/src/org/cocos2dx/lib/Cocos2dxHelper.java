@@ -91,7 +91,8 @@ public class Cocos2dxHelper {
     private static boolean sCompassEnabled;
     private static boolean sActivityVisible;
     private static String sPackageName;
-    private static Activity sActivity = null;
+//    private static Activity sActivity = null;
+    private static Context sContext = null;
     public static Cocos2dxHelperListener sCocos2dxHelperListener;
     private static Set<OnActivityResultListener> onActivityResultListeners = new LinkedHashSet<OnActivityResultListener>();
     private static Vibrator sVibrateService = null;
@@ -111,12 +112,12 @@ public class Cocos2dxHelper {
     // ===========================================================
 
     public static void runOnGLThread(final Runnable r) {
-        ((Cocos2dxActivity)sActivity).runOnGLThread(r);
+        sCocos2dxHelperListener.runOnGLThread(r);
     }
 
     private static boolean sInited = false;
-    public static void init(final Activity activity) {
-        sActivity = activity;
+    public static void init(final Context activity) {
+        sContext = activity;
         if (activity instanceof Cocos2dxHelperListener) Cocos2dxHelper.sCocos2dxHelperListener = (Cocos2dxHelperListener)activity;
         if (!sInited) {
 
@@ -198,7 +199,7 @@ public class Cocos2dxHelper {
             if (obbFile.exists())
                 Cocos2dxHelper.sAssetsPath = fullPathToOBB;
             else
-                Cocos2dxHelper.sAssetsPath = Cocos2dxHelper.sActivity.getApplicationInfo().sourceDir;
+                Cocos2dxHelper.sAssetsPath = sContext.getApplicationInfo().sourceDir;
         }
         
         return Cocos2dxHelper.sAssetsPath;
@@ -231,13 +232,14 @@ public class Cocos2dxHelper {
         }
 
         public void onServiceDisconnected(ComponentName name) {
-            sActivity.getApplicationContext().unbindService(connection);
+            sContext.getApplicationContext().unbindService(connection);
         }
     };
     //Enhance API modification end
     
     public static Activity getActivity() {
-        return sActivity;
+        if (sContext instanceof Activity) return (Activity) sContext;
+        return null;
     }
     
     public static void addOnActivityResultListener(OnActivityResultListener listener) {
@@ -264,17 +266,17 @@ public class Cocos2dxHelper {
     // Methods
     // ===========================================================
 
-    private static native void nativeSetEditTextDialogResult(final byte[] pBytes);
+    public static native void nativeSetEditTextDialogResult(final byte[] pBytes);
 
-    private static native void nativeSetContext(final Context pContext, final AssetManager pAssetManager);
+    public static native void nativeSetContext(final Context pContext, final AssetManager pAssetManager);
 
-    private static native void nativeSetAudioDeviceInfo(boolean isSupportLowLatency, int deviceSampleRate, int audioBufferSizeInFames);
+    public static native void nativeSetAudioDeviceInfo(boolean isSupportLowLatency, int deviceSampleRate, int audioBufferSizeInFames);
 
     public static String getCocos2dxPackageName() {
         return Cocos2dxHelper.sPackageName;
     }
     public static String getCocos2dxWritablePath() {
-        return sActivity.getFilesDir().getAbsolutePath();
+        return sContext.getFilesDir().getAbsolutePath();
     }
 
     public static String getCurrentLanguage() {
@@ -309,7 +311,7 @@ public class Cocos2dxHelper {
     }
 
     public static void setKeepScreenOn(boolean value) {
-        ((Cocos2dxActivity)sActivity).setKeepScreenOn(value);
+        if (sContext instanceof Cocos2dxActivity) ((Cocos2dxActivity)sContext).setKeepScreenOn(value);
     }
 
     public static void vibrate(float duration) {
@@ -330,7 +332,7 @@ public class Cocos2dxHelper {
         try {
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setData(Uri.parse(url));
-            sActivity.startActivity(i);
+            sContext.startActivity(i);
             ret = true;
         } catch (Exception e) {
         }
@@ -380,7 +382,7 @@ public class Cocos2dxHelper {
     public static void terminateProcess() {
         // Remove it from recent apps.
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            sActivity.finishAndRemoveTask();
+            if (sContext instanceof Activity) ((Activity) sContext).finishAndRemoveTask();
         }
         android.os.Process.killProcess(android.os.Process.myPid());
     }
@@ -407,7 +409,7 @@ public class Cocos2dxHelper {
 
     public static int getDPI()
     {
-        if (sActivity != null)
+        /*if (sActivity != null)
         {
             DisplayMetrics metrics = new DisplayMetrics();
             WindowManager wm = sActivity.getWindowManager();
@@ -420,6 +422,10 @@ public class Cocos2dxHelper {
                     return (int)(metrics.density*160.0f);
                 }
             }
+        }*/
+        if (sContext != null) {
+            DisplayMetrics metric = sContext.getResources().getDisplayMetrics();
+            return metric.densityDpi;
         }
         return -1;
     }
@@ -429,7 +435,7 @@ public class Cocos2dxHelper {
     // ===========================================================
     
     public static boolean getBoolForKey(String key, boolean defaultValue) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         try {
             return settings.getBoolean(key, defaultValue);
         }
@@ -458,7 +464,7 @@ public class Cocos2dxHelper {
     }
     
     public static int getIntegerForKey(String key, int defaultValue) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         try {
             return settings.getInt(key, defaultValue);
         }
@@ -486,7 +492,7 @@ public class Cocos2dxHelper {
     }
     
     public static float getFloatForKey(String key, float defaultValue) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         try {
             return settings.getFloat(key, defaultValue);
         }
@@ -519,7 +525,7 @@ public class Cocos2dxHelper {
     }
     
     public static String getStringForKey(String key, String defaultValue) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         try {
             return settings.getString(key, defaultValue);
         }
@@ -531,21 +537,21 @@ public class Cocos2dxHelper {
     }
     
     public static void setBoolForKey(String key, boolean value) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putBoolean(key, value);
         editor.apply();
     }
     
     public static void setIntegerForKey(String key, int value) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt(key, value);
         editor.apply();
     }
     
     public static void setFloatForKey(String key, float value) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putFloat(key, value);
         editor.apply();
@@ -553,21 +559,21 @@ public class Cocos2dxHelper {
     
     public static void setDoubleForKey(String key, double value) {
         // SharedPreferences doesn't support recording double value
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putFloat(key, (float)value);
         editor.apply();
     }
     
     public static void setStringForKey(String key, String value) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString(key, value);
         editor.apply();
     }
     
     public static void deleteValueForKey(String key) {
-        SharedPreferences settings = sActivity.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
+        SharedPreferences settings = sContext.getSharedPreferences(Cocos2dxHelper.PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.remove(key);
         editor.apply();
@@ -664,7 +670,7 @@ public class Cocos2dxHelper {
      */
     public static boolean isScreenRound() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (sActivity.getResources().getConfiguration().isScreenRound()) {
+            if (sContext.getResources().getConfiguration().isScreenRound()) {
                 return true;
             }
         }
@@ -679,8 +685,8 @@ public class Cocos2dxHelper {
      */
     @SuppressLint("InlinedApi")
     public static boolean isCutoutEnabled() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            WindowManager.LayoutParams lp = sActivity.getWindow().getAttributes();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && sContext instanceof Activity) {
+            WindowManager.LayoutParams lp = ((Activity) sContext).getWindow().getAttributes();
             return lp.layoutInDisplayCutoutMode == WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
 
@@ -695,8 +701,8 @@ public class Cocos2dxHelper {
     @SuppressLint("NewApi") 
     public static int[] getSafeInsets() {
         final int[] safeInsets = new int[]{0, 0, 0, 0};
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            Window cocosWindow = sActivity.getWindow();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && sContext instanceof Activity) {
+            Window cocosWindow = ((Activity) sContext).getWindow();
             DisplayCutout displayCutout = cocosWindow.getDecorView().getRootWindowInsets().getDisplayCutout();
             // Judge whether it is cutouts (aka notch) screen phone by judge cutout equle to null
             if (displayCutout != null) {
@@ -725,8 +731,8 @@ public class Cocos2dxHelper {
     public static boolean hasSoftKeys() {
         boolean hasSoftwareKeys = true;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            Display display = sActivity.getWindowManager().getDefaultDisplay();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && sContext instanceof Activity) {
+            Display display = ((Activity) sContext).getWindowManager().getDefaultDisplay();
 
             DisplayMetrics realDisplayMetrics = new DisplayMetrics();
             display.getRealMetrics(realDisplayMetrics);
@@ -743,7 +749,7 @@ public class Cocos2dxHelper {
             hasSoftwareKeys = (realWidth - displayWidth) > 0 ||
                     (realHeight - displayHeight) > 0;
         } else {
-            boolean hasMenuKey = ViewConfiguration.get(sActivity).hasPermanentMenuKey();
+            boolean hasMenuKey = ViewConfiguration.get(sContext).hasPermanentMenuKey();
             boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
             hasSoftwareKeys = !hasMenuKey && !hasBackKey;
         }
@@ -765,7 +771,7 @@ public class Cocos2dxHelper {
 
     private static Cocos2dxAccelerometer getAccelerometer() {
         if (null == sCocos2dxAccelerometer)
-            Cocos2dxHelper.sCocos2dxAccelerometer = new Cocos2dxAccelerometer(sActivity);
+            Cocos2dxHelper.sCocos2dxAccelerometer = new Cocos2dxAccelerometer(sContext);
 
         return sCocos2dxAccelerometer;
     }
