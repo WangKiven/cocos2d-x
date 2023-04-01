@@ -15,5 +15,24 @@ dependencyResolutionManagement {
 }
 rootProject.name = "testCocos"
 include ':app'
-include ':libcocos2dx'
-project(':libcocos2dx').projectDir = new File(settingsDir, '../../../cocos/platform/android/libcocos2dx')
+/*include ':libcocos2dx'
+project(':libcocos2dx').projectDir = new File(settingsDir, '../../../cocos/platform/android/libcocos2dx')*/
+def COCOS2DX_PATH = System.getenv("COCOS2DX_PATH")
+//include ':libcocos2dx'
+//project(':libcocos2dx').projectDir = new File("${COCOS2DX_PATH}/cocos/platform/android/libcocos2dx")
+// 为了在未配置COCOS2DX_PATH时，防止gradle生成多余的无用文件，下面的代码在判断COCOS2DX_PATH的值后，才决定是否导入libcocos2dx
+// 如果，不怕在未配置COCOS2DX_PATH时生成多余的文件的话，直接用上边的两行代码就可以了。
+if (COCOS2DX_PATH != null && !COCOS2DX_PATH.isBlank()) {
+    System.println("COCOS2DX_PATH = ${COCOS2DX_PATH}")
+    def libDir = new File("${COCOS2DX_PATH}/cocos/platform/android/libcocos2dx")
+    if (libDir.exists() && libDir.isDirectory() &&
+            libDir.listFiles().any {it.isFile() && it.name == "build.gradle"}) {
+
+        include ':libcocos2dx'
+        project(':libcocos2dx').projectDir = libDir
+    } else {
+        System.println("COCOS2DX_PATH 下找不到 libcocos2dx ，请确认COCOS2DX_PATH是否配置正确")
+    }
+} else {
+    System.println("请在电脑中配置环境变量COCOS2DX_PATH，指定cocos2d-x所在路径")
+}
